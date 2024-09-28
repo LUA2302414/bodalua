@@ -34,7 +34,7 @@
     </style>
 </head>
 <body>
-    <h1>♥ Bienvenidos a la boda de: Luiggy & Arianna ♥</h1>
+    <h1>♥ DEJA UN MENSAJE A LOS NOVIOS ♥</h1>
     
     <input type="file" id="videoInput" accept="video/*">
     <video id="videoPlayer" controls></video>
@@ -50,7 +50,6 @@
 
         let mediaRecorder;
         let audioChunks = [];
-        let audioBlob;
 
         // Cargar el video seleccionado
         videoInput.addEventListener('change', (event) => {
@@ -73,11 +72,8 @@
                 };
 
                 mediaRecorder.onstop = () => {
-                    audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
                     audioChunks = [];
-                    const audioUrl = URL.createObjectURL(audioBlob);
-                    audioPlayer.src = audioUrl;
-                    audioPlayer.play(); // Reproduce automáticamente el audio
 
                     // Guardar el audio automáticamente
                     const downloadUrl = URL.createObjectURL(audioBlob);
@@ -88,10 +84,6 @@
                     document.body.appendChild(a);
                     a.click();
                     document.body.removeChild(a);
-
-                    // Reiniciar la grabación para un nuevo audio
-                    mediaRecorder = null; // Permitir una nueva grabación
-                    recordButton.textContent = '🎤'; // Restablecer el botón
                 };
             }
 

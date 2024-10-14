@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video y Grabación de Audio</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px; /* Reducir el margen */
+            background-color: #556B2F; /* Color de fondo */
+            color: white; /* Color del texto */
+        }
+        video {
+            width: 100%; /* Usar el ancho completo de la pantalla */
+            max-width: 600px; /* Reducir el tamaño máximo del video */
+            margin-top: 30px; /* Reducir el margen superior */
+            border-radius: 10px; /* Reducir el radio de las esquinas redondeadas */
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5); /* Ajustar la sombra */
+        }
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px; /* Espacio entre los botones */
+            margin-top: 10px;
+        }
+        button {
+            padding: 8px 16px; /* Reducir el tamaño de los botones */
+            font-size: 14px; /* Reducir el tamaño de la fuente */
+            color: white;
+            background-color: #4CAF50; /* Color de fondo del botón */
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button.active {
+            background-color: #D32F2F; /* Color cuando está activo */
+        }
+        button:hover {
+            background-color: #45a049; /* Color al pasar el mouse */
+        }
+        audio {
+            margin-top: 15px; /* Espaciado adecuado para el reproductor de audio */
+            width: 100%; /* Hacer que el audio ocupe el ancho completo */
+            max-width: 600px; /* Mantener consistencia con el tamaño del video */
+        }
+    </style>
+</head>
+<body>
+    <h1>♥ BIENVENIDOS A LA BODA DE LUIGGY & ARIANNA ♥</h1>
+    
+    <input type="file" id="videoInput" accept="video/*">
+    <video id="videoPlayer" controls></video>
+    
+    <!-- Contenedor para los botones -->
+    <div class="button-container">
+        <button id="replayButton" style="display: none;">Reproducir Video</button>
+        <button id="recordButton">Grabar Audio</button>
+    </div>
+
+    <audio id="audioPlayer" controls></audio>
+
+    <script>
+        const videoInput = document.getElementById('videoInput');
+        const videoPlayer = document.getElementById('videoPlayer');
+        const recordButton = document.getElementById('recordButton');
+        const replayButton = document.getElementById('replayButton');
+        const audioPlayer = document.getElementById('audioPlayer');
+
+        let mediaRecorder;
+        let audioChunks = [];
+
+        // Cargar el video seleccionado
+        videoInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const url = URL.createObjectURL(file);
+                videoPlayer.src = url;
+                videoPlayer.play(); // Reproducir automáticamente el video cargado
+                replayButton.style.display = 'none'; // Ocultar el botón de reproducción al cargar un nuevo video
+            }
+        });
+
+        // Mostrar botón de reproducir cuando el video termina
+        videoPlayer.addEventListener('ended', () => {
+            replayButton.style.display = 'block';
+        });
+
+        // Volver a reproducir el video
+        replayButton.addEventListener('click', () => {
+            videoPlayer.currentTime = 0; // Reiniciar el tiempo
+            videoPlayer.play(); // Reproducir
+            replayButton.style.display = 'none'; // Ocultar el botón
+        });
+
+        // Configurar grabación de audio
+        recordButton.addEventListener('click', async () => {
+            if (!mediaRecorder) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+
+                    mediaRecorder.ondataavailable = (event) => {
+                        audioChunks.push(event.data);
+                    };
+
+                    mediaRecorder.onstop = () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                        audioChunks = [];
+                        const audioUrl = URL.createObjectURL(audioBlob);
+                        audioPlayer.src = audioUrl;
+
+                        // Crear un enlace de descarga y hacer clic en él
+                        const downloadLink = document.createElement('a');
+                        downloadLink.href = audioUrl;
+                        downloadLink.download = 'grabacion_audio.wav'; // Nombre del archivo
+                        document.body.appendChild(downloadLink);
+                        downloadLink.click();
+                        document.body.removeChild(downloadLink);
+                    };
+                } catch (error) {
+                    console.error('Error al acceder al micrófono:', error);
+                    alert('No se puede acceder al micrófono. Asegúrate de haber otorgado permisos.');
+                }
+            }
+
+            if (mediaRecorder.state === 'inactive') {
+                mediaRecorder.start();
+                recordButton.textContent = 'Detener Grabación';
+                recordButton.classList.add('active'); // Cambiar el estilo del botón
+            } else {
+                mediaRecorder.stop();
+                recordButton.textContent = 'Grabar Audio';
+                recordButton.classList.remove('active'); // Volver al estilo original
+            }
+        });
+    </script>
+</body>
+</html>
